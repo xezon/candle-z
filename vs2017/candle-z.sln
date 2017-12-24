@@ -13,6 +13,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "candle-z", "candle-z.vcxpro
 		{1E96B197-7EC2-42F0-80DA-94E5B01AAC14} = {1E96B197-7EC2-42F0-80DA-94E5B01AAC14}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "launcher", "launcher.vcxproj", "{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B2B12F2A-687A-4E6B-B3D3-D765B85E3D43} = {B2B12F2A-687A-4E6B-B3D3-D765B85E3D43}
+		{D2A8C562-5CC1-4C79-B498-65BCD65C219E} = {D2A8C562-5CC1-4C79-B498-65BCD65C219E}
+		{1E96B197-7EC2-42F0-80DA-94E5B01AAC14} = {1E96B197-7EC2-42F0-80DA-94E5B01AAC14}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +48,14 @@ Global
 		{B2B12F2A-687A-4E6B-B3D3-D765B85E3D43}.Release|x64.ActiveCfg = Release|Win32
 		{B2B12F2A-687A-4E6B-B3D3-D765B85E3D43}.Release|x86.ActiveCfg = Release|Win32
 		{B2B12F2A-687A-4E6B-B3D3-D765B85E3D43}.Release|x86.Build.0 = Release|Win32
+		{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}.Debug|x64.ActiveCfg = Debug|x64
+		{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}.Debug|x64.Build.0 = Debug|x64
+		{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}.Debug|x86.ActiveCfg = Debug|Win32
+		{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}.Debug|x86.Build.0 = Debug|Win32
+		{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}.Release|x64.ActiveCfg = Release|x64
+		{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}.Release|x64.Build.0 = Release|x64
+		{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}.Release|x86.ActiveCfg = Release|Win32
+		{C4AEE1C6-26AF-41D7-9840-44F215AB4B3F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
