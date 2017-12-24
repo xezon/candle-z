@@ -4,20 +4,13 @@
 #define ZORRO_USE_EVENT_CLASS
 #include <zorro_impl.h>
 #include <common/types.h>
+#include "pattern_matcher.h"
+
+bot::CPatternMatcher g_patternMatcher;
 
 void CZorroEvents::main()
 {
-	set(EZorroFlag::OPENEND);
-	set(EZorroFlag::TICKS);
-	LookBack = 0;
-	BarPeriod = PERIOD_D1;
-	StartDate = 20130101;
-	EndDate = 20150101;
-
-	for (uint32_t assetId = 0; string assetName = Assets[assetId]; ++assetId)
-	{
-		asset(assetName);
-	}
+	g_patternMatcher.FeedPatternsFromCsv("D:/Trading/Code/candle-z/data");
 }
 
 void CZorroEvents::run()

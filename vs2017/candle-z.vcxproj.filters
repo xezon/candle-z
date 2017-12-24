@@ -17,5 +17,23 @@
     <ClInclude Include="..\src\zutils.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\json.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\types.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\csv_loader.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\pattern_matcher.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\chance.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\candle.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

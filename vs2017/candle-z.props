@@ -11,7 +11,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir).$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
 	<ClCompile>
-      <AdditionalIncludeDirectories>..\src;..\..\commonlib\include;..\..\gsl\include;..\..\zorro-dll\include%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>..\src;..\..\commonlib\include;..\..\gsl\include;..\..\zorro-dll\include;..\..\jsoncons\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

@@ -74,6 +74,12 @@
     <ClCompile Include="..\src\zevents.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\candle.h" />
+    <ClInclude Include="..\src\csv_loader.h" />
+    <ClInclude Include="..\src\json.h" />
+    <ClInclude Include="..\src\pattern_matcher.h" />
+    <ClInclude Include="..\src\chance.h" />
+    <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\zutils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
