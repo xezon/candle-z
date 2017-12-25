@@ -76,7 +76,7 @@ inline SPriceMove operator/ (SPriceMove a, const double b)
 	return a;
 }
 
-struct SPriceMoves
+struct SUpDownPriceMove
 {
 	double GetUpWinChance() const
 	{
@@ -86,10 +86,10 @@ struct SPriceMoves
 		if (downCount == 0)
 			return 1.0;
 
-		double up   = static_cast<double>(upCount);
-		double down = static_cast<double>(downCount);
-		double sum  = up + down;
-		return up / sum;
+		double up_d   = static_cast<double>(upCount);
+		double down_d = static_cast<double>(downCount);
+		double sum  = up_d + down_d;
+		return up_d / sum;
 	}
 
 	double GetUpProfitChance() const
@@ -121,5 +121,41 @@ struct SPriceMoves
 	size_t upCount = 0;
 	size_t downCount = 0;
 };
+
+template <size_t N>
+using TUpDownPriceMoves = std::array<SUpDownPriceMove, N>;
+
+template <size_t N>
+inline double GetUpWinChance(TUpDownPriceMoves<N> moves)
+{
+	double chance = 0.0;
+	for (const SUpDownPriceMove& move : moves)
+	{
+		chance += move.GetUpWinChance();
+	}
+	return chance / N;
+}
+
+template <size_t N>
+inline double GetUpProfitChance(TUpDownPriceMoves<N> moves)
+{
+	double chance = 0.0;
+	for (const SUpDownPriceMove& move : moves)
+	{
+		chance += move.GetUpProfitChance();
+	}
+	return chance / N;
+}
+
+template <size_t N>
+inline double GetUpMaxProfitChance(TUpDownPriceMoves<N> moves)
+{
+	double chance = 0.0;
+	for (const SUpDownPriceMove& move : moves)
+	{
+		chance += move.GetUpMaxProfitChance();
+	}
+	return chance / N;
+}
 
 } // namespace bot

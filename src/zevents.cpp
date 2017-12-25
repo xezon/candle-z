@@ -6,23 +6,33 @@
 #include <common/types.h>
 #include "pattern_matcher.h"
 
-bot::CPatternMatcher g_patternMatcher;
+bot::CPatternMatcher<1,1> g_patternMatcher11;
+bot::CPatternMatcher<2,2> g_patternMatcher22;
 
 void CZorroEvents::main()
 {
-	g_patternMatcher.LoadDataSetsFromCsv("../data");
-	g_patternMatcher.BuildCandlePatterns();
+	g_patternMatcher11.LoadDataSetsFromCsv("../data");
+	g_patternMatcher22.LoadDataSetsFromCsv("../data");
+	g_patternMatcher11.BuildCandlePatterns();
+	g_patternMatcher22.BuildCandlePatterns();
 
-	bot::SDataPoint dataPoint;
-	dataPoint.open = 16611.0;
-	dataPoint.high = 17153.0;
-	dataPoint.low = 13966.0;
-	dataPoint.close = 15198.0;
+	bot::SDataPoint dataPoint0;
+	dataPoint0.open = 13812;
+	dataPoint0.high = 16639;
+	dataPoint0.low = 13333;
+	dataPoint0.close = 16611;
 
-	bot::SPriceMoves priceMoves = g_patternMatcher.GetExpectedPriceMoves(dataPoint);
-	double upWinChance = priceMoves.GetUpWinChance();
-	double upProfitChance = priceMoves.GetUpProfitChance();
-	double upMaxProfitChance = priceMoves.GetUpMaxProfitChance();
+	bot::SDataPoint dataPoint1;
+	dataPoint1.open = 16611;
+	dataPoint1.high = 17153;
+	dataPoint1.low = 13966;
+	dataPoint1.close = 15198;
+
+	auto priceMoves = g_patternMatcher22.GetExpectedPriceMoves(dataPoint0, dataPoint1);
+
+	double upWinChance = GetUpWinChance(priceMoves);
+	double upProfitChance = GetUpProfitChance(priceMoves);
+	double upMaxProfitChance = GetUpMaxProfitChance(priceMoves);
 }
 
 void CZorroEvents::run()
