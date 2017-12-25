@@ -74,6 +74,7 @@
     <ClCompile Include="..\src\zevents.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\data_set.h" />
     <ClInclude Include="..\src\data_point.h" />
     <ClInclude Include="..\src\csv_loader.h" />
     <ClInclude Include="..\src\json.h" />

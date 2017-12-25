@@ -47,9 +47,9 @@ struct SPriceMove
 		return close < 0.0;
 	}
 	
-	double high = 0;
-	double low = 0;
-	double close = 0;
+	double high = 0.0;
+	double low = 0.0;
+	double close = 0.0;
 };
 
 inline SPriceMove operator+ (SPriceMove a, const SPriceMove& b)
@@ -97,7 +97,7 @@ struct SUpDownPriceMove
 		if (up.close == 0.0 && down.close == 0.0)
 			return 0.0;
 
-		if (down.close == 0)
+		if (down.close == 0.0)
 			return 1.0;
 
 		double sum = up.close + (-down.close);
@@ -109,7 +109,7 @@ struct SUpDownPriceMove
 		if (up.high == 0.0 && down.high == 0.0)
 			return 0.0;
 
-		if (down.high == 0)
+		if (down.high == 0.0)
 			return 1.0;
 
 		double sum = up.high + (-down.high);

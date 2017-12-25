@@ -3,35 +3,12 @@
 
 #include "types.h"
 #include "json.h"
-#include "data_point.h"
+#include "data_set.h"
 
 namespace bot {
 
 class CCsvLoader
 {
-public:
-	struct SDataSet
-	{
-		string name;
-		fs::path path;
-		TDataPoints data;
-
-		bool empty() const
-		{
-			return data.empty();
-		}
-
-		void clear()
-		{
-			name.clear();
-			path.clear();
-			data.clear();
-		}
-	};
-
-	using TDataSets = vector<SDataSet>;
-
-private:
 	static SDataSet LoadDataSet(const fs::path& path)
 	{
 		SDataSet dataSet;

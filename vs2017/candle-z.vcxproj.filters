@@ -35,5 +35,8 @@
     <ClInclude Include="..\src\price_move.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\data_set.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

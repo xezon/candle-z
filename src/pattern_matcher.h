@@ -2,7 +2,6 @@
 #pragma once
 
 #include "csv_loader.h"
-#include "data_point.h"
 #include "price_move.h"
 
 namespace bot {
@@ -171,16 +170,16 @@ public:
 		return GetExpectedPriceMoves(dataPoints);
 	}
 
-	void BuildCandlePatterns()
+	void BuildCandlePatterns(const TDataSets& dataSets)
 	{
 		m_candleGroups.clear();
 
-		for (const CCsvLoader::SDataSet& dataSet : m_dataSets)
+		for (const SDataSet& dataSet : dataSets)
 		{
 			const size_t candleBegin = PatternN - 1;
 			const size_t candleEnd = dataSet.data.size() - ResultN;
 			const size_t candleCount = candleEnd - candleBegin;
-			m_candleGroups.reserve(candleEnd);
+			m_candleGroups.reserve(candleCount - 1);
 
 			for (size_t candle = candleBegin; candle < candleCount; ++candle)
 			{
@@ -205,13 +204,7 @@ public:
 		}
 	}
 
-	void LoadDataSetsFromCsv(const string& dir)
-	{
-		m_dataSets = CCsvLoader::LoadDataSets(dir);
-	}
-
 private:
-	CCsvLoader::TDataSets m_dataSets;
 	TCandleGroups m_candleGroups;
 };
 

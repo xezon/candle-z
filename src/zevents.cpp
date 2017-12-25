@@ -4,6 +4,7 @@
 #define ZORRO_USE_EVENT_CLASS
 #include <zorro_impl.h>
 #include <common/types.h>
+#include "csv_loader.h"
 #include "pattern_matcher.h"
 
 bot::CPatternMatcher<1,1> g_patternMatcher11;
@@ -11,10 +12,10 @@ bot::CPatternMatcher<2,2> g_patternMatcher22;
 
 void CZorroEvents::main()
 {
-	g_patternMatcher11.LoadDataSetsFromCsv("../data");
-	g_patternMatcher22.LoadDataSetsFromCsv("../data");
-	g_patternMatcher11.BuildCandlePatterns();
-	g_patternMatcher22.BuildCandlePatterns();
+	const bot::TDataSets dataSets = bot::CCsvLoader::LoadDataSets("../data");
+
+	g_patternMatcher11.BuildCandlePatterns(dataSets);
+	g_patternMatcher22.BuildCandlePatterns(dataSets);
 
 	bot::SDataPoint dataPoint0;
 	dataPoint0.open = 13812;
