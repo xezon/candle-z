@@ -10,6 +10,7 @@
 #include <fstream>
 #include <algorithm>
 #include <experimental/filesystem>
+#include <limits>
 
 namespace std {
 namespace filesystem = std::experimental::filesystem;

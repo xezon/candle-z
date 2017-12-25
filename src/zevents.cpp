@@ -10,7 +10,19 @@ bot::CPatternMatcher g_patternMatcher;
 
 void CZorroEvents::main()
 {
-	g_patternMatcher.FeedPatternsFromCsv("D:/Trading/Code/candle-z/data");
+	g_patternMatcher.LoadDataSetsFromCsv("../data");
+	g_patternMatcher.BuildCandlePatterns();
+
+	bot::SDataPoint dataPoint;
+	dataPoint.open = 16611.0;
+	dataPoint.high = 17153.0;
+	dataPoint.low = 13966.0;
+	dataPoint.close = 15198.0;
+
+	bot::SPriceMoves priceMoves = g_patternMatcher.GetExpectedPriceMoves(dataPoint);
+	double upWinChance = priceMoves.GetUpWinChance();
+	double upProfitChance = priceMoves.GetUpProfitChance();
+	double upMaxProfitChance = priceMoves.GetUpMaxProfitChance();
 }
 
 void CZorroEvents::run()

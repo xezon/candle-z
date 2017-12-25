@@ -29,10 +29,10 @@
     <ClInclude Include="..\src\pattern_matcher.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\chance.h">
+    <ClInclude Include="..\src\data_point.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\candle.h">
+    <ClInclude Include="..\src\price_move.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
