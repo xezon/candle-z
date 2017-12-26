@@ -6,6 +6,11 @@
 
 namespace bot {
 
+struct SPatternMatcherSettings
+{
+	double similarityExp = 1.0;
+};
+
 template <size_t PatternN, size_t ResultN>
 class CPatternMatcher
 {
@@ -38,17 +43,16 @@ class CPatternMatcher
 		double GetSimilarity(const double magnitudeA, const double magnitudeB) const
 		{
 			double similarity = 0.0;
-			const double absA = abs(magnitudeA);
-			const double absB = abs(magnitudeB);
-			constexpr double eps = std::numeric_limits<double>::epsilon();
+			const double absA = std::abs(magnitudeA);
+			const double absB = std::abs(magnitudeB);
 
-			if (absA > eps && absB > eps)
+			if (absA > DoubleEps && absB > DoubleEps)
 			{
 				similarity = (absA > absB)
 					? magnitudeB / magnitudeA
 					: magnitudeA / magnitudeB;
 			}
-			else if (absA == 0.0 && absB == 0.0)
+			else if (absA <= DoubleEps && absB <= DoubleEps)
 			{
 				similarity = 1.0;
 			}
@@ -92,28 +96,45 @@ public:
 	using TDataPointPatterns = std::array<SDataPoint, PatternN>;
 private:
 
+	struct SMatchingResult
+	{
+		double similarity = 0.0;
+		TPriceMoves moves;
+	};
+
 	struct SCandleGroup
 	{
 		SCandleGroup()
 		{}
 
-		TPriceMoves GetExpectedPriceMoves(const TCandlePatterns& candles) const
+		SMatchingResult Match(
+			const SPatternMatcherSettings& settings,
+			const TCandlePatterns& candles) const
 		{
-			double similarity = 0.0;
+			SMatchingResult matchingResult;
+
 			for (size_t i = 0; i < PatternN; ++i)
 			{
 				const SCandle& userCandle = candles[i];
 				const SCandle& patternCandle = patterns[i];
-				similarity += userCandle.GetSimilarity(patternCandle);
+				matchingResult.similarity += userCandle.GetSimilarity(patternCandle);
 			}
+			matchingResult.similarity /= PatternN;
+			matchingResult.similarity = std::pow(matchingResult.similarity, settings.similarityExp);
 
-			TPriceMoves moves;
 			for (size_t i = 0; i < ResultN; ++i)
 			{
 				const SCandle& candle = results[i];
-				moves[i] = candle.magnitude * similarity;
+				SPriceMove& move = matchingResult.moves[i];
+				move = candle.magnitude * matchingResult.similarity;
+
+				if (matchingResult.similarity < 0.0)
+				{
+					// Similarity is inverse: swap high and low values
+					std::swap(move.high, move.low);
+				}
 			}
-			return moves;
+			return matchingResult;
 		}
 		
 		TCandlePatterns patterns;
@@ -133,29 +154,31 @@ private:
 	}
 
 public:
-	TUpDownPriceMoves<ResultN> GetExpectedPriceMoves(const TDataPointPatterns& dataPoints) const
+	TUpDownPriceMoves<ResultN> GetExpectedPriceMoves(
+		const SPatternMatcherSettings& settings,
+		const TDataPointPatterns& dataPoints) const
 	{
 		TUpDownPriceMoves<ResultN> upDownPriceMoves;
 		const TCandlePatterns candles = ToCandlePatterns(dataPoints);
 
 		for (const SCandleGroup& group : m_candleGroups)
 		{
-			const TPriceMoves priceMoves = group.GetExpectedPriceMoves(candles);
+			const SMatchingResult matchingResult = group.Match(settings, candles);
 
 			for (size_t i = 0; i < ResultN; ++i)
 			{
-				const SPriceMove& priceMove = priceMoves[i];
+				const SPriceMove& priceMove = matchingResult.moves[i];
 				SUpDownPriceMove& upDownPriceMove = upDownPriceMoves[i];
 
 				if (priceMove.Up())
 				{
 					upDownPriceMove.up += priceMove;
-					upDownPriceMove.upCount++;
+					upDownPriceMove.upCount += std::abs(matchingResult.similarity);
 				}
 				else if (priceMove.Down())
 				{
 					upDownPriceMove.down += priceMove;
-					upDownPriceMove.downCount++;
+					upDownPriceMove.downCount += std::abs(matchingResult.similarity);
 				}
 			}
 		}
@@ -163,11 +186,13 @@ public:
 	}
 
 	template <class... Args>
-	TUpDownPriceMoves<ResultN> GetExpectedPriceMoves(const Args&... args) const
+	TUpDownPriceMoves<ResultN> GetExpectedPriceMoves(
+		const SPatternMatcherSettings& settings,
+		const Args&... args) const
 	{
 		static_assert(sizeof...(args) == PatternN, "Argument size must match pattern size");
-		TDataPointPatterns dataPoints = { args... };
-		return GetExpectedPriceMoves(dataPoints);
+		const TDataPointPatterns dataPoints = { args... };
+		return GetExpectedPriceMoves(settings, dataPoints);
 	}
 
 	void BuildCandlePatterns(const TDataSets& dataSets)

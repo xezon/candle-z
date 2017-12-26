@@ -39,12 +39,12 @@ struct SPriceMove
 
 	bool Up() const
 	{
-		return close > 0.0;
+		return close > DoubleEps;
 	}
 
 	bool Down() const
 	{
-		return close < 0.0;
+		return close < -DoubleEps;
 	}
 	
 	double high = 0.0;
@@ -78,84 +78,140 @@ inline SPriceMove operator/ (SPriceMove a, const double b)
 
 struct SUpDownPriceMove
 {
+	static double GetChance(double a, double b)
+	{
+		if (a <= DoubleEps && b <= DoubleEps)
+		{
+			// Both values are zero
+			// it is impossible to make a chance prediction
+			return 0.0;
+		}
+		
+		if (b <= DoubleEps)
+		{
+			// b is zero, 100% chance to hit a
+			return 1.0;
+		}
+		
+		double sum = a + b;
+		return a / sum;
+	}
+
 	double GetUpWinChance() const
 	{
-		if (upCount == 0 && downCount == 0)
-			return 0.0;
+		return GetChance(upCount, downCount);
+	}
 
-		if (downCount == 0)
-			return 1.0;
-
-		double up_d   = static_cast<double>(upCount);
-		double down_d = static_cast<double>(downCount);
-		double sum  = up_d + down_d;
-		return up_d / sum;
+	double GetDownWinChance() const
+	{
+		return GetChance(downCount, upCount);
 	}
 
 	double GetUpProfitChance() const
 	{
-		if (up.close == 0.0 && down.close == 0.0)
-			return 0.0;
+		return GetChance(up.close, -down.close);
+	}
 
-		if (down.close == 0.0)
-			return 1.0;
-
-		double sum = up.close + (-down.close);
-		return up.close / sum;
+	double GetDownProfitChance() const
+	{
+		return GetChance(-down.close, up.close);
 	}
 
 	double GetUpMaxProfitChance() const
 	{
-		if (up.high == 0.0 && down.high == 0.0)
-			return 0.0;
+		return GetChance(up.high, -down.low);
+	}
 
-		if (down.high == 0.0)
-			return 1.0;
+	double GetDownMaxProfitChance() const
+	{
+		return GetChance(-down.low, up.high);
+	}
 
-		double sum = up.high + (-down.high);
-		return up.high / sum;
+	static double GetUpWinChance(const SUpDownPriceMove& move)
+	{
+		return move.GetUpWinChance();
+	}
+
+	static double GetDownWinChance(const SUpDownPriceMove& move)
+	{
+		return move.GetDownWinChance();
+	}
+
+	static double GetUpProfitChance(const SUpDownPriceMove& move)
+	{
+		return move.GetUpProfitChance();
+	}
+
+	static double GetDownProfitChance(const SUpDownPriceMove& move)
+	{
+		return move.GetDownProfitChance();
+	}
+
+	static double GetUpMaxProfitChance(const SUpDownPriceMove& move)
+	{
+		return move.GetUpMaxProfitChance();
+	}
+
+	static double GetDownMaxProfitChance(const SUpDownPriceMove& move)
+	{
+		return move.GetDownMaxProfitChance();
 	}
 
 	SPriceMove up;
 	SPriceMove down;
-	size_t upCount = 0;
-	size_t downCount = 0;
+	double upCount = 0.0;
+	double downCount = 0.0;
 };
 
 template <size_t N>
 using TUpDownPriceMoves = std::array<SUpDownPriceMove, N>;
+using TUpDownPriceChanceFunction = double (*)(const SUpDownPriceMove&);
 
 template <size_t N>
-inline double GetUpWinChance(TUpDownPriceMoves<N> moves)
+inline double GetChance(TUpDownPriceMoves<N> moves, TUpDownPriceChanceFunction function)
 {
 	double chance = 0.0;
 	for (const SUpDownPriceMove& move : moves)
 	{
-		chance += move.GetUpWinChance();
+		chance += function(move);
 	}
 	return chance / N;
+}
+
+template <size_t N>
+inline double GetUpWinChance(TUpDownPriceMoves<N> moves)
+{
+	return GetChance(moves, SUpDownPriceMove::GetUpWinChance);
+}
+
+template <size_t N>
+inline double GetDownWinChance(TUpDownPriceMoves<N> moves)
+{
+	return GetChance(moves, SUpDownPriceMove::GetDownWinChance);
 }
 
 template <size_t N>
 inline double GetUpProfitChance(TUpDownPriceMoves<N> moves)
 {
-	double chance = 0.0;
-	for (const SUpDownPriceMove& move : moves)
-	{
-		chance += move.GetUpProfitChance();
-	}
-	return chance / N;
+	return GetChance(moves, SUpDownPriceMove::GetUpProfitChance);
+}
+
+template <size_t N>
+inline double GetDownProfitChance(TUpDownPriceMoves<N> moves)
+{
+	return GetChance(moves, SUpDownPriceMove::GetDownProfitChance);
 }
 
 template <size_t N>
 inline double GetUpMaxProfitChance(TUpDownPriceMoves<N> moves)
 {
-	double chance = 0.0;
-	for (const SUpDownPriceMove& move : moves)
-	{
-		chance += move.GetUpMaxProfitChance();
-	}
-	return chance / N;
+	return GetChance(moves, SUpDownPriceMove::GetUpMaxProfitChance);
+}
+
+template <size_t N>
+inline double GetDownMaxProfitChance(TUpDownPriceMoves<N> moves)
+{
+	return GetChance(moves, SUpDownPriceMove::GetDownMaxProfitChance);
 }
 
 } // namespace bot

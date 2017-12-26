@@ -9,13 +9,20 @@
 
 bot::CPatternMatcher<1,1> g_patternMatcher11;
 bot::CPatternMatcher<2,2> g_patternMatcher22;
+bot::CPatternMatcher<2,1> g_patternMatcher21;
+
+#pragma warning(push)
+#pragma warning(disable: 4189)
 
 void CZorroEvents::main()
 {
 	const bot::TDataSets dataSets = bot::CCsvLoader::LoadDataSets("../data");
+	bot::SPatternMatcherSettings settings;
+	settings.similarityExp = 2.0;
 
 	g_patternMatcher11.BuildCandlePatterns(dataSets);
 	g_patternMatcher22.BuildCandlePatterns(dataSets);
+	g_patternMatcher21.BuildCandlePatterns(dataSets);
 
 	bot::SDataPoint dataPoint0;
 	dataPoint0.open = 13812;
@@ -29,12 +36,28 @@ void CZorroEvents::main()
 	dataPoint1.low = 13966;
 	dataPoint1.close = 15198;
 
-	auto priceMoves = g_patternMatcher22.GetExpectedPriceMoves(dataPoint0, dataPoint1);
+	auto priceMoves11 = g_patternMatcher11.GetExpectedPriceMoves(settings, dataPoint1);
+	auto priceMoves22 = g_patternMatcher22.GetExpectedPriceMoves(settings, dataPoint0, dataPoint1);
+	auto priceMoves21 = g_patternMatcher21.GetExpectedPriceMoves(settings, dataPoint0, dataPoint1);
 
-	double upWinChance = GetUpWinChance(priceMoves);
-	double upProfitChance = GetUpProfitChance(priceMoves);
-	double upMaxProfitChance = GetUpMaxProfitChance(priceMoves);
+	double upWinChance11 = GetUpWinChance(priceMoves11);
+	double upProfitChance11 = GetUpProfitChance(priceMoves11);
+	double upMaxProfitChance11 = GetUpMaxProfitChance(priceMoves11);
+
+	double downWinChance11 = GetDownWinChance(priceMoves11);
+	double downProfitChance11 = GetDownProfitChance(priceMoves11);
+	double downMaxProfitChance11 = GetDownMaxProfitChance(priceMoves11);
+
+	double upWinChance22 = GetUpWinChance(priceMoves22);
+	double upProfitChance22 = GetUpProfitChance(priceMoves22);
+	double upMaxProfitChance22 = GetUpMaxProfitChance(priceMoves22);
+
+	double upWinChance21 = GetUpWinChance(priceMoves21);
+	double upProfitChance21 = GetUpProfitChance(priceMoves21);
+	double upMaxProfitChance21 = GetUpMaxProfitChance(priceMoves21);
 }
+
+#pragma warning(pop)
 
 void CZorroEvents::run()
 {

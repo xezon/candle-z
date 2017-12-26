@@ -27,4 +27,6 @@ using wstring_view = std::wstring_view;
 template <class Type>
 using vector = std::vector<Type, allocator<Type>>;
 namespace fs = std::filesystem;
+
+constexpr double DoubleEps = std::numeric_limits<double>::epsilon();
 } // namespace bot
