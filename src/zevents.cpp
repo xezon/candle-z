@@ -18,7 +18,9 @@ void CZorroEvents::main()
 {
 	const bot::TDataSets dataSets = bot::CCsvLoader::LoadDataSets("../data");
 	bot::SPatternMatcherSettings settings;
-	settings.similarityExp = 2.0;
+	settings.matchingExp = 1.0;
+	settings.matchingThreshold = 0.0;
+	settings.useOppositeMatches = true;
 
 	g_patternMatcher11.BuildCandlePatterns(dataSets);
 	g_patternMatcher22.BuildCandlePatterns(dataSets);

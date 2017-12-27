@@ -8,14 +8,60 @@ namespace bot {
 
 struct SPatternMatcherSettings
 {
-	double similarityExp = 1.0;
+	// Exponential matching of candle.
+	// A less matching candle weighs exponentially less than
+	// a better matching candle with a higher exponent.
+	// Default of 1.0 is a linear weight.
+	double matchingExp = 1.0;
+
+	// Min threshold value for candle matching. Range: 0 to 1.
+	// Higher threshold ignores less matching candle patterns.
+	double matchingThreshold = 0.0;
+
+	// Pattern matcher ignores trend bias
+	// when opposite candle matches are permitted
+	bool useOppositeMatches = true;
 };
 
 template <size_t PatternN, size_t ResultN>
 class CPatternMatcher
 {
+	using TPriceMoves = std::array<SPriceMove, ResultN>;
+
 	static_assert(PatternN > 0, "Pattern size must be at least 1");
 	static_assert(ResultN > 0, "Follow up candle size must be at least 1");
+
+	struct SCandleSimilarity
+	{
+		SCandleSimilarity& operator += (const SCandleSimilarity& other)
+		{
+			high    += other.high;
+			low     += other.low;
+			close   += other.close;
+			overall += other.overall;
+			return *this;
+		}
+
+		SCandleSimilarity& operator *= (double value)
+		{
+			high    *= value;
+			low     *= value;
+			close   *= value;
+			overall *= value;
+			return *this;
+		}
+
+		double high    = 0.0;
+		double low     = 0.0;
+		double close   = 0.0;
+		double overall = 0.0;
+	};
+
+	struct SMatchingResult
+	{
+		SCandleSimilarity similarity;
+		TPriceMoves moves;
+	};
 
 	struct SCandle
 	{
@@ -59,49 +105,45 @@ class CPatternMatcher
 			return similarity;
 		}
 
-		double GetSimilarity(const SCandle& other) const
+		SCandleSimilarity GetSimilarity(const SPatternMatcherSettings& settings, const SCandle& other) const
 		{
-			double closeSimilarity = GetSimilarity(magnitude.close, other.magnitude.close);
-			double highSimilarity;
-			double lowSimilarity;
+			SCandleSimilarity similarity;
+			similarity.close = GetSimilarity(magnitude.close, other.magnitude.close);
 			double direction;
 
-			if (closeSimilarity >= 0.0)
+			if (similarity.close >= 0.0)
 			{
-				highSimilarity = GetSimilarity(magnitude.high, other.magnitude.high);
-				lowSimilarity  = GetSimilarity(magnitude.low , other.magnitude.low);
-				direction      = 1.0;
+				similarity.high = GetSimilarity(magnitude.high, other.magnitude.high);
+				similarity.low  = GetSimilarity(magnitude.low , other.magnitude.low);
+				direction = 1.0;
 			}
 			else
 			{
-				// Candles move opposite of each other
-				// Swap high and low for pattern matching
-				closeSimilarity = -closeSimilarity;
-				highSimilarity  = -GetSimilarity(magnitude.high, other.magnitude.low);
-				lowSimilarity   = -GetSimilarity(magnitude.low , other.magnitude.high);
-				direction       = -1.0;
+				// Candles move opposite of each other.
+				// Swap high and low for pattern matching.
+				similarity.high  = -GetSimilarity(magnitude.high, other.magnitude.low);
+				similarity.low   = -GetSimilarity(magnitude.low , other.magnitude.high);
+				similarity.close = -similarity.close;
+				direction = -1.0;
 			}
 
-			const double similarity = (highSimilarity + lowSimilarity + closeSimilarity) / 3.0 * direction;
+			similarity.high    = std::pow(similarity.high , settings.matchingExp) * direction;
+			similarity.low     = std::pow(similarity.low  , settings.matchingExp) * direction;
+			similarity.close   = std::pow(similarity.close, settings.matchingExp) * direction;
+			similarity.overall = (similarity.high + similarity.low + similarity.close) / 3.0;
 			return similarity;
 		}
 
 		SPriceMove magnitude;
 	};
 
-	using TPriceMoves = std::array<SPriceMove, ResultN>;
 	using TCandlePatterns = std::array<SCandle, PatternN>;
 	using TCandleResults = std::array<SCandle, ResultN>;
+
 public:
 	using TDataPointPatterns = std::array<SDataPoint, PatternN>;
+
 private:
-
-	struct SMatchingResult
-	{
-		double similarity = 0.0;
-		TPriceMoves moves;
-	};
-
 	struct SCandleGroup
 	{
 		SCandleGroup()
@@ -117,20 +159,27 @@ private:
 			{
 				const SCandle& userCandle = candles[i];
 				const SCandle& patternCandle = patterns[i];
-				matchingResult.similarity += userCandle.GetSimilarity(patternCandle);
+				const SCandleSimilarity similarity = userCandle.GetSimilarity(settings, patternCandle);
+
+				// Adding similarities for multi candle patterns is ok.
+				// Converging candle similarities within a pattern will cancel each other out.
+				matchingResult.similarity += similarity;
 			}
-			matchingResult.similarity /= PatternN;
-			matchingResult.similarity = std::pow(matchingResult.similarity, settings.similarityExp);
+			matchingResult.similarity *= 1.0 / PatternN;
 
 			for (size_t i = 0; i < ResultN; ++i)
 			{
-				const SCandle& candle = results[i];
 				SPriceMove& move = matchingResult.moves[i];
-				move = candle.magnitude * matchingResult.similarity;
+				const SCandle& candle = results[i];
+				move = candle.magnitude;
 
-				if (matchingResult.similarity < 0.0)
+				move.high  *= matchingResult.similarity.high;
+				move.low   *= matchingResult.similarity.low;
+				move.close *= matchingResult.similarity.close;
+
+				if (matchingResult.similarity.close < 0.0)
 				{
-					// Similarity is inverse: swap high and low values
+					// Similarity is inverse: swap high and low values.
 					std::swap(move.high, move.low);
 				}
 			}
@@ -158,12 +207,22 @@ public:
 		const SPatternMatcherSettings& settings,
 		const TDataPointPatterns& dataPoints) const
 	{
-		TUpDownPriceMoves<ResultN> upDownPriceMoves;
 		const TCandlePatterns candles = ToCandlePatterns(dataPoints);
+		TUpDownPriceMoves<ResultN> upDownPriceMoves;
+		size_t totalUps[ResultN] = {0};
+		size_t totalDowns[ResultN] = {0};
 
 		for (const SCandleGroup& group : m_candleGroups)
 		{
 			const SMatchingResult matchingResult = group.Match(settings, candles);
+			const double overallSimilarity = matchingResult.similarity.overall;
+			const double absOverallSimilarity = std::abs(overallSimilarity);
+
+			if (absOverallSimilarity < settings.matchingThreshold)
+				continue;
+
+			if (!settings.useOppositeMatches && overallSimilarity < 0.0)
+				continue;
 
 			for (size_t i = 0; i < ResultN; ++i)
 			{
@@ -172,16 +231,26 @@ public:
 
 				if (priceMove.Up())
 				{
-					upDownPriceMove.up += priceMove;
-					upDownPriceMove.upCount += std::abs(matchingResult.similarity);
+					totalUps[i]++;
+					upDownPriceMove.upTotalMagnitude += priceMove;
+					upDownPriceMove.upCount += absOverallSimilarity;
 				}
 				else if (priceMove.Down())
 				{
-					upDownPriceMove.down += priceMove;
-					upDownPriceMove.downCount += std::abs(matchingResult.similarity);
+					totalDowns[i]++;
+					upDownPriceMove.downTotalMagnitude += priceMove;
+					upDownPriceMove.downCount += absOverallSimilarity;
 				}
 			}
 		}
+
+		for (size_t i = 0; i < ResultN; ++i)
+		{
+			SUpDownPriceMove& upDownPriceMove = upDownPriceMoves[i];
+			upDownPriceMove.upAvgMagnitude = upDownPriceMove.upTotalMagnitude / totalUps[i];
+			upDownPriceMove.downAvgMagnitude = upDownPriceMove.downTotalMagnitude / totalDowns[i];
+		}
+
 		return upDownPriceMoves;
 	}
 

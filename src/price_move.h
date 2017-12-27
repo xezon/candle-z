@@ -72,7 +72,7 @@ inline SPriceMove operator* (SPriceMove a, const double b)
 
 inline SPriceMove operator/ (SPriceMove a, const double b)
 {
-	a *= b;
+	a /= b;
 	return a;
 }
 
@@ -109,22 +109,22 @@ struct SUpDownPriceMove
 
 	double GetUpProfitChance() const
 	{
-		return GetChance(up.close, -down.close);
+		return GetChance(upTotalMagnitude.close, -downTotalMagnitude.close);
 	}
 
 	double GetDownProfitChance() const
 	{
-		return GetChance(-down.close, up.close);
+		return GetChance(-downTotalMagnitude.close, upTotalMagnitude.close);
 	}
 
 	double GetUpMaxProfitChance() const
 	{
-		return GetChance(up.high, -down.low);
+		return GetChance(upTotalMagnitude.high, -downTotalMagnitude.low);
 	}
 
 	double GetDownMaxProfitChance() const
 	{
-		return GetChance(-down.low, up.high);
+		return GetChance(-downTotalMagnitude.low, upTotalMagnitude.high);
 	}
 
 	static double GetUpWinChance(const SUpDownPriceMove& move)
@@ -157,8 +157,10 @@ struct SUpDownPriceMove
 		return move.GetDownMaxProfitChance();
 	}
 
-	SPriceMove up;
-	SPriceMove down;
+	SPriceMove upTotalMagnitude;
+	SPriceMove downTotalMagnitude;
+	SPriceMove upAvgMagnitude;
+	SPriceMove downAvgMagnitude;
 	double upCount = 0.0;
 	double downCount = 0.0;
 };
