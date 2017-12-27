@@ -99,12 +99,12 @@ struct SUpDownPriceMove
 
 	double GetUpWinChance() const
 	{
-		return GetChance(upCount, downCount);
+		return GetChance(upSimilarity, downSimilarity);
 	}
 
 	double GetDownWinChance() const
 	{
-		return GetChance(downCount, upCount);
+		return GetChance(downSimilarity, upSimilarity);
 	}
 
 	double GetUpProfitChance() const
@@ -157,63 +157,106 @@ struct SUpDownPriceMove
 		return move.GetDownMaxProfitChance();
 	}
 
+	SPriceMove GetUpAvgMagnitude() const
+	{
+		if (upCount > 0)
+		{
+			return upTotalMagnitude / upCount;
+		}
+		return SPriceMove();
+	}
+
+	SPriceMove GetDownAvgMagnitude() const
+	{
+		if (downCount > 0)
+		{
+			return downTotalMagnitude / downCount;
+		}
+		return SPriceMove();
+	}
+
+	static SPriceMove GetUpAvgMagnitude(const SUpDownPriceMove& move)
+	{
+		return move.GetUpAvgMagnitude();
+	}
+
+	static SPriceMove GetDownAvgMagnitude(const SUpDownPriceMove& move)
+	{
+		return move.GetDownAvgMagnitude();
+	}
+
 	SPriceMove upTotalMagnitude;
 	SPriceMove downTotalMagnitude;
-	SPriceMove upAvgMagnitude;
-	SPriceMove downAvgMagnitude;
-	double upCount = 0.0;
-	double downCount = 0.0;
+	double upSimilarity = 0.0;
+	double downSimilarity = 0.0;
+	size_t upCount = 0;
+	size_t downCount = 0;
 };
 
 template <size_t N>
 using TUpDownPriceMoves = std::array<SUpDownPriceMove, N>;
-using TUpDownPriceChanceFunction = double (*)(const SUpDownPriceMove&);
 
-template <size_t N>
-inline double GetChance(TUpDownPriceMoves<N> moves, TUpDownPriceChanceFunction function)
+template <class ReturnType>
+using TUpDownPriceStaticFunction = ReturnType (*)(const SUpDownPriceMove&);
+
+template <size_t N, class ValueType>
+inline ValueType GetAverageValue(TUpDownPriceMoves<N> moves, TUpDownPriceStaticFunction<ValueType> function)
 {
-	double chance = 0.0;
+	static_assert(N > 0, "Array size must be at least 1");
+	ValueType value = {};
 	for (const SUpDownPriceMove& move : moves)
 	{
-		chance += function(move);
+		value += function(move);
 	}
-	return chance / N;
+	return value / N;
 }
 
 template <size_t N>
 inline double GetUpWinChance(TUpDownPriceMoves<N> moves)
 {
-	return GetChance(moves, SUpDownPriceMove::GetUpWinChance);
+	return GetAverageValue(moves, SUpDownPriceMove::GetUpWinChance);
 }
 
 template <size_t N>
 inline double GetDownWinChance(TUpDownPriceMoves<N> moves)
 {
-	return GetChance(moves, SUpDownPriceMove::GetDownWinChance);
+	return GetAverageValue(moves, SUpDownPriceMove::GetDownWinChance);
 }
 
 template <size_t N>
 inline double GetUpProfitChance(TUpDownPriceMoves<N> moves)
 {
-	return GetChance(moves, SUpDownPriceMove::GetUpProfitChance);
+	return GetAverageValue(moves, SUpDownPriceMove::GetUpProfitChance);
 }
 
 template <size_t N>
 inline double GetDownProfitChance(TUpDownPriceMoves<N> moves)
 {
-	return GetChance(moves, SUpDownPriceMove::GetDownProfitChance);
+	return GetAverageValue(moves, SUpDownPriceMove::GetDownProfitChance);
 }
 
 template <size_t N>
 inline double GetUpMaxProfitChance(TUpDownPriceMoves<N> moves)
 {
-	return GetChance(moves, SUpDownPriceMove::GetUpMaxProfitChance);
+	return GetAverageValue(moves, SUpDownPriceMove::GetUpMaxProfitChance);
 }
 
 template <size_t N>
 inline double GetDownMaxProfitChance(TUpDownPriceMoves<N> moves)
 {
-	return GetChance(moves, SUpDownPriceMove::GetDownMaxProfitChance);
+	return GetAverageValue(moves, SUpDownPriceMove::GetDownMaxProfitChance);
+}
+
+template <size_t N>
+inline SPriceMove GetUpAvgMagnitude(TUpDownPriceMoves<N> moves)
+{
+	return GetAverageValue(moves, SUpDownPriceMove::GetUpAvgMagnitude);
+}
+
+template <size_t N>
+inline SPriceMove GetDownAvgMagnitude(TUpDownPriceMoves<N> moves)
+{
+	return GetAverageValue(moves, SUpDownPriceMove::GetDownAvgMagnitude);
 }
 
 } // namespace bot

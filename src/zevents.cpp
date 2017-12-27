@@ -45,6 +45,8 @@ void CZorroEvents::main()
 	double upWinChance11 = GetUpWinChance(priceMoves11);
 	double upProfitChance11 = GetUpProfitChance(priceMoves11);
 	double upMaxProfitChance11 = GetUpMaxProfitChance(priceMoves11);
+	bot::SPriceMove upAvgMagnitude = GetUpAvgMagnitude(priceMoves11);
+	bot::SPriceMove downAvgMagnitude = GetDownAvgMagnitude(priceMoves11);
 
 	double downWinChance11 = GetDownWinChance(priceMoves11);
 	double downProfitChance11 = GetDownProfitChance(priceMoves11);

@@ -209,8 +209,6 @@ public:
 	{
 		const TCandlePatterns candles = ToCandlePatterns(dataPoints);
 		TUpDownPriceMoves<ResultN> upDownPriceMoves;
-		size_t totalUps[ResultN] = {0};
-		size_t totalDowns[ResultN] = {0};
 
 		for (const SCandleGroup& group : m_candleGroups)
 		{
@@ -231,24 +229,17 @@ public:
 
 				if (priceMove.Up())
 				{
-					totalUps[i]++;
 					upDownPriceMove.upTotalMagnitude += priceMove;
-					upDownPriceMove.upCount += absOverallSimilarity;
+					upDownPriceMove.upSimilarity += absOverallSimilarity;
+					upDownPriceMove.upCount++;
 				}
 				else if (priceMove.Down())
 				{
-					totalDowns[i]++;
 					upDownPriceMove.downTotalMagnitude += priceMove;
-					upDownPriceMove.downCount += absOverallSimilarity;
+					upDownPriceMove.downSimilarity += absOverallSimilarity;
+					upDownPriceMove.downCount++;
 				}
 			}
-		}
-
-		for (size_t i = 0; i < ResultN; ++i)
-		{
-			SUpDownPriceMove& upDownPriceMove = upDownPriceMoves[i];
-			upDownPriceMove.upAvgMagnitude = upDownPriceMove.upTotalMagnitude / totalUps[i];
-			upDownPriceMove.downAvgMagnitude = upDownPriceMove.downTotalMagnitude / totalDowns[i];
 		}
 
 		return upDownPriceMoves;
